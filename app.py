@@ -10,6 +10,8 @@ import time as time_module  # Rename the time module to avoid conflicts
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# Add a secret key for flash messages
+app.config['SECRET_KEY'] = 'your_secret_key_here'
 db = SQLAlchemy(app)
 
 # Table for storing order information like Order ID (unique), Number of items, Delivery date, Sender name, Recipient name, Recipient address, Status (default: "Ongoing")
@@ -48,12 +50,25 @@ if not db_exists:
 def view_orders():
     orders = Order.query.all()
     return render_template('view_orders.html', orders=orders)
+
+# View logs
+@app.route('/logs')
+def view_logs():
+    logs = Log.query.order_by(Log.timestamp.desc()).all()
+    return render_template('logs.html', logs=logs)
+
 # User Functions.
 # Function to log actions
 def log_action(action_type, performer_name):
     log_entry = Log(type=action_type, performer=performer_name)
     db.session.add(log_entry)
     db.session.commit()
+    
+# Route to display the add order form
+@app.route('/add_order', methods=['GET'])
+def show_add_order_form():
+    return render_template('add_order.html')
+
 # Add a new order
 @app.route('/add_order', methods=['POST'])
 def add_order():
@@ -92,7 +107,7 @@ def add_order():
         db.session.commit()
 
         # show a pop-up input field to enter the user's name for logging
-        performer_name = request.form.get('sender_name', 'Unknown')
+        performer_name = request.form.get('performer_name', sender_name)
         if not performer_name:
             flash('Your name is required for logging!', 'error')
             return redirect(url_for('add_order'))
@@ -101,6 +116,11 @@ def add_order():
 
         flash('Order added successfully!', 'success')
         return redirect(url_for('view_orders'))
+# Display form to edit an order    
+@app.route('/edit_order/<int:order_id>', methods=['GET'])
+def show_edit_form(order_id):
+    order = Order.query.get_or_404(order_id)
+    return render_template('edit_order.html', order=order)
     
 @app.route('/delete_order/<int:order_id>', methods=['POST'])
 def delete_order(order_id):
@@ -109,11 +129,12 @@ def delete_order(order_id):
     db.session.commit()
 
     # Log the action
-    performer_name = request.form.get('sender_name', 'Unknown')
+    performer_name = request.form.get('performer_name', 'Unknown')
     log_action('Delete Order', performer_name)
 
     flash('Order deleted successfully!', 'success')
     return redirect(url_for('view_orders'))
+
 @app.route('/update_order/<int:order_id>', methods=['POST'])
 def update_order(order_id):
     order = Order.query.get_or_404(order_id)
@@ -133,11 +154,12 @@ def update_order(order_id):
         db.session.commit()
 
         # Log the action
-        performer_name = request.form.get('sender_name', 'Unknown')
+        performer_name = request.form.get('performer_name', 'Unknown')
         log_action('Update Order', performer_name)
 
         flash('Order updated successfully!', 'success')
         return redirect(url_for('view_orders'))
+    
 @app.route('/Mark Order as Completed/<int:order_id>', methods=['POST'])
 def mark_order_completed(order_id):
     order = Order.query.get_or_404(order_id)
@@ -145,10 +167,11 @@ def mark_order_completed(order_id):
     db.session.commit()
 
     # Log the action
-    performer_name = request.form.get('sender_name', 'Unknown')
+    performer_name = request.form.get('performer_name', 'Unknown')
     log_action('Mark Order as Completed', performer_name)
 
     flash('Order marked as completed!', 'success')
     return redirect(url_for('view_orders'))
+
 if __name__ == '__main__':
     app.run(debug=True)

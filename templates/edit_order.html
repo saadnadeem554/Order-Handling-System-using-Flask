@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add New Order</title>
+    <title>Edit Order</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
@@ -16,7 +16,7 @@
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 class="mb-4">Add New Order</h1>
+            <h1 class="mb-4">Edit Order #{{ order.id }}</h1>
             
             <a href="{{ url_for('view_orders') }}" class="btn btn-secondary mb-3">Back to Orders</a>
             
@@ -28,30 +28,30 @@
                 {% endif %}
             {% endwith %}
             
-            <form action="{{ url_for('add_order') }}" method="POST">
+            <form action="{{ url_for('update_order', order_id=order.id) }}" method="POST">
                 <div class="form-group">
                     <label for="items">Number of Items:</label>
-                    <input type="number" class="form-control" id="items" name="items" required>
+                    <input type="number" class="form-control" id="items" name="items" value="{{ order.items }}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="delivery_date">Delivery Date:</label>
-                    <input type="date" class="form-control" id="delivery_date" name="delivery_date" required>
+                    <input type="date" class="form-control" id="delivery_date" name="delivery_date" value="{{ order.delivery_date }}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="sender_name">Sender Name:</label>
-                    <input type="text" class="form-control" id="sender_name" name="sender_name" required>
+                    <input type="text" class="form-control" id="sender_name" name="sender_name" value="{{ order.sender_name }}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="recipient_name">Recipient Name:</label>
-                    <input type="text" class="form-control" id="recipient_name" name="recipient_name" required>
+                    <input type="text" class="form-control" id="recipient_name" name="recipient_name" value="{{ order.recipient_name }}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="recipient_address">Recipient Address:</label>
-                    <textarea class="form-control" id="recipient_address" name="recipient_address" rows="3" required></textarea>
+                    <textarea class="form-control" id="recipient_address" name="recipient_address" rows="3" required>{{ order.recipient_address }}</textarea>
                 </div>
                 
                 <div class="form-group">
@@ -59,7 +59,7 @@
                     <input type="text" class="form-control" id="performer_name" name="performer_name" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Add Order</button>
+                <button type="submit" class="btn btn-primary">Update Order</button>
             </form>
         </div>
     </div>
