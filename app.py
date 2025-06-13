@@ -1,17 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date, timedelta, time  # Added time here
-from functools import wraps
+from datetime import datetime
 import os
-from io import StringIO
 from sqlalchemy import func
-import random
-import time as time_module  # Rename the time module to avoid conflicts
 
 app = Flask(__name__)
+# using SQLite database because it is easy and lightweight
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 # Add a secret key for flash messages
-app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['SECRET_KEY'] = '1234567890abcdef'
 db = SQLAlchemy(app)
 
 # Table for storing order information like Order ID (unique), Number of items, Delivery date, Sender name, Recipient name, Recipient address, Status (default: "Ongoing")
@@ -127,6 +124,7 @@ def show_edit_form(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template('edit_order.html', order=order)
     
+# Delete an order
 @app.route('/delete_order/<int:order_id>', methods=['POST'])
 def delete_order(order_id):
     order = Order.query.get_or_404(order_id)
@@ -140,6 +138,7 @@ def delete_order(order_id):
     flash('Order deleted successfully!', 'success')
     return redirect(url_for('view_orders'))
 
+# Edit an order
 @app.route('/update_order/<int:order_id>', methods=['POST'])
 def update_order(order_id):
     order = Order.query.get_or_404(order_id)
@@ -164,7 +163,8 @@ def update_order(order_id):
 
         flash('Order updated successfully!', 'success')
         return redirect(url_for('view_orders'))
-    
+  
+# Mark an order as completed  
 @app.route('/Mark Order as Completed/<int:order_id>', methods=['POST'])
 def mark_order_completed(order_id):
     order = Order.query.get_or_404(order_id)
