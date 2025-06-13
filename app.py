@@ -74,14 +74,18 @@ def show_add_order_form():
 def add_order():
     if request.method == 'POST':
         # get values from the form to fill the table in database
-        if not request.form['items'] or not request.form['delivery_date'] or not request.form['sender_name'] or not request.form['recipient_name'] or not request.form['recipient_address']:       # validation check!
+        if not request.form['items'] or not request.form['delivery_date'] or not request.form['sender_name'] or not request.form['recipient_name'] or not request.form['recipient_address']:
             flash('All fields are required!', 'error')
-            return redirect(url_for('add_order'))
+            return redirect(url_for('show_add_order_form'))
+        
         items = request.form['items']
         delivery_date = request.form['delivery_date']
         sender_name = request.form['sender_name']
         recipient_name = request.form['recipient_name']
         recipient_address = request.form['recipient_address']
+        
+        # Check if order should be marked as completed immediately
+        status = 'Completed' if 'mark_completed' in request.form else 'Ongoing'
         
         # check for exact duplicates
         existing_order = Order.query.filter_by(
@@ -93,29 +97,30 @@ def add_order():
         ).first()
         if existing_order:
             flash('This order already exists!', 'error')
-            return redirect(url_for('add_order'))
+            return redirect(url_for('show_add_order_form'))
 
         new_order = Order(
             items=items,
             delivery_date=datetime.strptime(delivery_date, '%Y-%m-%d').date(),
             sender_name=sender_name,
             recipient_name=recipient_name,
-            recipient_address=recipient_address
+            recipient_address=recipient_address,
+            status=status
         )
         
         db.session.add(new_order)
         db.session.commit()
 
-        # show a pop-up input field to enter the user's name for logging
+        # Get performer name for logging
         performer_name = request.form.get('performer_name', sender_name)
-        if not performer_name:
-            flash('Your name is required for logging!', 'error')
-            return redirect(url_for('add_order'))
-        # Log the action
-        log_action('Add Order', performer_name)
+        
+        # Log the action with appropriate message
+        action_type = 'Add Order (Completed)' if status == 'Completed' else 'Add Order'
+        log_action(action_type, performer_name)
 
         flash('Order added successfully!', 'success')
         return redirect(url_for('view_orders'))
+    
 # Display form to edit an order    
 @app.route('/edit_order/<int:order_id>', methods=['GET'])
 def show_edit_form(order_id):
